@@ -1,0 +1,210 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1800" viewBox="0 0 1800 1800" role="img" aria-labelledby="title desc">
+  <title id="title">企业 Agent 平台整体设计</title>
+  <desc id="desc">首期 IT 服务台只读问答架构。左侧展示飞书与受控文件的知识接入，右侧展示飞书身份、权限前置混合检索和 DeepSeek 网关调用。底部展示 PostgreSQL、pgvector、本地 Embedding 和加密文件存储；旁侧展示治理保障及后续扩展。</desc>
+  <defs>
+    <style>
+      text { font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; fill: #182c43; }
+      .title { font-size: 42px; font-weight: 700; }
+      .subtitle { font-size: 20px; fill: #5c6e81; }
+      .section { font-size: 24px; font-weight: 650; }
+      .heading { font-size: 22px; font-weight: 650; }
+      .body { font-size: 18px; fill: #52677a; }
+      .small { font-size: 16px; fill: #617489; }
+      .tag { font-size: 16px; font-weight: 600; }
+      .number { font-size: 20px; font-weight: 700; fill: white; text-anchor: middle; }
+      .card { fill: white; stroke: #d4dfeb; stroke-width: 1.5; }
+      .blue { fill: #eef5ff; stroke: #b7d2f7; stroke-width: 1.5; }
+      .amber { fill: #fff8ed; stroke: #e6c994; stroke-width: 1.5; }
+      .future { fill: #f5f6f8; stroke: #b8c1cd; stroke-width: 1.5; stroke-dasharray: 7 5; }
+      .flow { fill: none; stroke: #4777a8; stroke-width: 2.5; }
+      .model-flow { fill: none; stroke: #4777a8; stroke-width: 2.5; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#4777a8"/>
+    </marker>
+    <marker id="start" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto">
+      <path d="M8 0 L0 4 L8 8 Z" fill="#4777a8"/>
+    </marker>
+  </defs>
+  <rect width="1800" height="1800" fill="#f7f9fc"/>
+  <rect x="48" y="48" width="7" height="82" rx="3" fill="#2563eb"/>
+  <text x="78" y="85" class="small" style="letter-spacing: 3px; fill: #2563eb;">ENTERPRISE AGENT PLATFORM / 设计预览</text>
+  <text x="76" y="132" class="title">企业 Agent 平台 · 整体架构</text>
+  <text x="78" y="168" class="subtitle">首期聚焦 IT 服务台只读问答：知识有来源、检索有权限、答案有引用、模型外发有边界。</text>
+  <rect x="1230" y="58" width="522" height="60" rx="14" fill="#eaf0f7"/>
+  <text x="1252" y="84" class="tag">当前：架构决策阶段 · 尚未实现</text>
+  <text x="1252" y="107" class="small">TypeScript 全栈；框架与部署资源待确认</text>
+  <rect x="80" y="192" width="17" height="17" rx="4" class="blue"/>
+  <text x="107" y="206" class="small">首期已确认路线</text>
+  <rect x="295" y="192" width="17" height="17" rx="4" class="amber"/>
+  <text x="322" y="206" class="small">治理建议 / 实现待定</text>
+  <rect x="552" y="192" width="17" height="17" rx="4" class="future"/>
+  <text x="579" y="206" class="small">后续扩展</text>
+  <text x="805" y="206" class="small">图中框表示逻辑职责，不代表独立微服务。</text>
+
+  <rect x="80" y="244" width="280" height="132" rx="16" class="blue"/>
+  <text x="102" y="278" class="heading">飞书文档 / 知识库</text>
+  <text x="102" y="310" class="body">部门在源系统维护资料</text>
+  <text x="102" y="340" class="body">内容、版本、源读取权限</text>
+  <rect x="380" y="244" width="280" height="132" rx="16" class="blue"/>
+  <text x="402" y="278" class="heading">受控本地文件</text>
+  <text x="402" y="310" class="body">PDF / Word / Excel / MD</text>
+  <text x="402" y="340" class="body">文件级 ACL 与版本登记</text>
+  <rect x="730" y="244" width="280" height="132" rx="16" class="blue"/>
+  <text x="752" y="278" class="heading">飞书统一身份</text>
+  <text x="752" y="310" class="body">登录、人员与组织映射</text>
+  <text x="752" y="340" class="body">部门、群组与权限主体</text>
+  <rect x="1030" y="244" width="280" height="132" rx="16" class="blue"/>
+  <text x="1052" y="278" class="heading">员工问答入口</text>
+  <text x="1052" y="310" class="body">制度、故障资料、流程指引</text>
+  <text x="1052" y="340" class="body">答案、引用、反馈与转人工</text>
+  <rect x="1430" y="244" width="322" height="132" rx="16" fill="#182f4c"/>
+  <text x="1452" y="277" class="heading" style="fill: white;">DeepSeek API</text>
+  <text x="1452" y="309" class="body" style="fill: #d6e3f2;">外部模型服务，不是本地模型</text>
+  <text x="1452" y="340" class="body" style="fill: #d6e3f2;">只接收获准外发的必要上下文</text>
+  <path d="M220 376 V418" class="flow"/>
+  <path d="M520 376 V418" class="flow"/>
+  <path d="M870 376 V418" class="flow"/>
+  <path d="M1170 376 V418" class="flow"/>
+
+  <rect x="48" y="426" width="1336" height="782" rx="24" fill="white" stroke="#bdcede" stroke-width="2"/>
+  <text x="80" y="464" class="section">平台应用层</text>
+  <text x="270" y="463" class="body">TypeScript 业务模块 · 统一权限策略 · 供应商能力通过接口隔离</text>
+  <rect x="80" y="488" width="580" height="694" rx="18" fill="#f5f8fc"/>
+  <rect x="730" y="488" width="580" height="694" rx="18" fill="#f5f8fc"/>
+  <text x="104" y="524" class="section">A · 知识接入与维护</text>
+  <text x="754" y="524" class="section">B · 在线问答与生成</text>
+
+  <rect x="104" y="546" width="532" height="106" rx="14" class="blue"/>
+  <circle cx="138" cy="582" r="18" fill="#2563eb"/><text x="138" y="589" class="number">1</text>
+  <text x="169" y="589" class="heading">连接器与定时增量同步</text>
+  <text x="128" y="619" class="body">同步获准范围；识别内容、权限与删除变化</text>
+  <text x="128" y="642" class="small">连接器能读到 ≠ 当前员工有权读取</text>
+  <path d="M370 652 V680" class="flow"/>
+
+  <rect x="104" y="690" width="532" height="106" rx="14" class="blue"/>
+  <circle cx="138" cy="726" r="18" fill="#2563eb"/><text x="138" y="733" class="number">2</text>
+  <text x="169" y="733" class="heading">解析、结构保留与索引准备</text>
+  <text x="128" y="763" class="body">章节定位、分块、中文分词、本地向量生成</text>
+  <text x="128" y="786" class="small">分块继承文件权限，并绑定来源版本</text>
+  <path d="M370 796 V824" class="flow"/>
+
+  <rect x="104" y="834" width="532" height="106" rx="14" class="blue"/>
+  <circle cx="138" cy="870" r="18" fill="#2563eb"/><text x="138" y="877" class="number">3</text>
+  <text x="169" y="877" class="heading">知识登记与有效版本管理</text>
+  <text x="128" y="907" class="body">来源、哈希、ACL、密级、状态与引用位置</text>
+  <text x="128" y="930" class="small">权限缺失或失效、文档停用 → 不可检索</text>
+  <path d="M370 940 V968" class="flow"/>
+
+  <rect x="104" y="978" width="532" height="106" rx="14" class="amber"/>
+  <circle cx="138" cy="1014" r="18" fill="#b87923"/><text x="138" y="1021" class="number">+</text>
+  <text x="169" y="1021" class="heading">建议：轻量知识管理台</text>
+  <text x="128" y="1051" class="body">来源登记、文件上传、负责人、复审与停用</text>
+  <text x="128" y="1074" class="small">飞书内容留在飞书维护；界面与治理规则待确认</text>
+  <text x="112" y="1124" class="body">维护责任：部门负责资料正确性</text>
+  <text x="112" y="1154" class="body">平台负责同步、索引、授权和可追溯性</text>
+
+  <rect x="754" y="546" width="532" height="106" rx="14" class="blue"/>
+  <circle cx="788" cy="582" r="18" fill="#2563eb"/><text x="788" y="589" class="number">1</text>
+  <text x="819" y="589" class="heading">身份授权与问答编排</text>
+  <text x="778" y="619" class="body">校验用户身份、请求权限与输入密级</text>
+  <text x="778" y="642" class="small">不接实时业务工具时，不宣称已完成实时诊断</text>
+  <path d="M1020 652 V680" class="flow"/>
+
+  <rect x="754" y="690" width="532" height="106" rx="14" class="blue"/>
+  <circle cx="788" cy="726" r="18" fill="#2563eb"/><text x="788" y="733" class="number">2</text>
+  <text x="819" y="733" class="heading">权限前置的混合检索</text>
+  <text x="778" y="763" class="body">关键词 + 向量 → 分块去重 → RRF 排名融合</text>
+  <text x="778" y="786" class="small">两路 SQL 均过滤 ACL、业务域、密级与有效版本</text>
+  <path d="M1020 796 V824" class="flow"/>
+
+  <rect x="754" y="834" width="532" height="106" rx="14" class="blue"/>
+  <circle cx="788" cy="870" r="18" fill="#2563eb"/><text x="788" y="877" class="number">3</text>
+  <text x="819" y="877" class="heading">Model Gateway · 模型网关</text>
+  <text x="778" y="907" class="body">必要上下文、外发策略、超时与调用管理</text>
+  <text x="778" y="930" class="small">严格受限内容阻断；脱敏不自动获得外发许可</text>
+  <path d="M1286 870 H1360 V310 H1430" class="model-flow"/>
+  <rect x="1326" y="655" width="66" height="140" rx="8" fill="#f7f9fc"/>
+  <text x="1358" y="686" class="small" text-anchor="middle">策略</text>
+  <text x="1358" y="710" class="small" text-anchor="middle">允许</text>
+  <text x="1358" y="751" class="small" text-anchor="middle">请求</text>
+  <text x="1358" y="775" class="small" text-anchor="middle">/ 响应</text>
+  <path d="M1020 940 V968" class="flow"/>
+
+  <rect x="754" y="978" width="532" height="106" rx="14" class="blue"/>
+  <circle cx="788" cy="1014" r="18" fill="#2563eb"/><text x="788" y="1021" class="number">4</text>
+  <text x="819" y="1021" class="heading">证据检查、引用与回答</text>
+  <text x="778" y="1051" class="body">有证据则回答；证据不足则拒答或转人工</text>
+  <text x="778" y="1074" class="small">返回原文、版本与定位；读取 / 下载重新授权</text>
+  <text x="762" y="1124" class="body">读取权限 ≠ 外发许可</text>
+  <text x="762" y="1154" class="body">模型不直接读取全库，也不持有无限制业务权限</text>
+
+  <rect x="1410" y="426" width="342" height="782" rx="24" class="amber"/>
+  <text x="1434" y="466" class="section">贯穿全链路的保障</text>
+  <text x="1434" y="496" class="small">基础安全必须前置，实现方式待定</text>
+  <path d="M1434 517 H1728" stroke="#e2cda9"/>
+  <text x="1434" y="555" class="heading">权限与数据分级</text>
+  <text x="1434" y="586" class="body">文件 ACL；失效默认拒绝</text>
+  <text x="1434" y="613" class="body">源权限不得被平台扩大</text>
+  <text x="1434" y="640" class="body">严格受限内容禁止外发</text>
+  <path d="M1434 666 H1728" stroke="#e2cda9"/>
+  <text x="1434" y="704" class="heading">会话审计与自动备份</text>
+  <text x="1434" y="735" class="body">脱敏追加式事件日志</text>
+  <text x="1434" y="762" class="body">会话 ID、时间戳、格式版本</text>
+  <text x="1434" y="789" class="body">受控加密、恢复与保留策略</text>
+  <text x="1434" y="816" class="small">密钥 / 令牌 / 密码不得进入日志</text>
+  <path d="M1434 842 H1728" stroke="#e2cda9"/>
+  <text x="1434" y="880" class="heading">评测、反馈与运行监测</text>
+  <text x="1434" y="911" class="body">召回、引用、越权与拒答</text>
+  <text x="1434" y="938" class="body">延迟、成本、同步与过期率</text>
+  <text x="1434" y="965" class="small">真实问题集与验收阈值待确认</text>
+  <path d="M1434 992 H1728" stroke="#e2cda9"/>
+  <text x="1434" y="1030" class="heading">业务域治理</text>
+  <text x="1434" y="1061" class="body">首期 IT；后续 HR、财务等</text>
+  <text x="1434" y="1088" class="body">知识范围、负责人、更新周期</text>
+  <text x="1434" y="1115" class="body">域归属不直接等于阅读权限</text>
+  <text x="1434" y="1160" class="small">撤权时效与复审规则仍需确认</text>
+
+  <path d="M370 1208 V1244" class="flow"/>
+  <path d="M1020 1244 V1208" class="flow"/>
+  <text x="402" y="1235" class="small">入库 / 更新</text>
+  <text x="1040" y="1235" class="small">授权查询 / 受控读取</text>
+  <rect x="48" y="1254" width="1704" height="168" rx="22" fill="#eaf0f8" stroke="#cbd9e8"/>
+  <text x="80" y="1290" class="section">受控数据与计算层</text>
+  <rect x="80" y="1308" width="510" height="88" rx="12" class="card"/>
+  <text x="100" y="1338" class="heading">PostgreSQL + pgvector</text>
+  <text x="100" y="1366" class="body">元数据、组织映射、文件 ACL、全文索引与向量</text>
+  <rect x="610" y="1308" width="450" height="88" rx="12" class="card"/>
+  <text x="630" y="1338" class="heading">本地中文 Embedding</text>
+  <text x="630" y="1366" class="body">入库与查询使用一致模型指纹与处理约定</text>
+  <rect x="1080" y="1308" width="640" height="88" rx="12" class="card"/>
+  <text x="1100" y="1338" class="heading">统一文件存储接口 → 本地加密受控目录</text>
+  <text x="1100" y="1366" class="body">保存原始文件与版本；受控下载；密钥与数据分离</text>
+
+  <rect x="48" y="1442" width="1704" height="116" rx="20" class="future"/>
+  <text x="80" y="1478" class="section">后续演进 · 不纳入首期默认实现</text>
+  <text x="80" y="1511" class="body">境内阿里云 + 私有 OSS</text>
+  <text x="525" y="1511" class="body">Skill + References 领域流程</text>
+  <text x="1010" y="1511" class="body">MCP Gateway + 实时业务查询</text>
+  <text x="80" y="1540" class="small">先本地验证，再做云端安全、容量与恢复验证。</text>
+  <text x="525" y="1540" class="small">渐进式读取仍遵守权限、版本与外发策略。</text>
+  <text x="1010" y="1540" class="small">独立工具授权；未来写入须另行确认与审批。</text>
+  <text x="52" y="1592" class="small">基于项目 ADR 与落地计划 · 2026-10-24 · 前后端框架、Embedding 运行组件、管理台范围和云资源尚未锁定。</text>
+  <text x="52" y="1620" class="small">图为整体设计预览，不代表组件已实现或生产合规已验证；首期不额外引入独立搜索引擎、神经重排序或多 Agent。</text>
+  <g fill="#4777a8">
+    <path d="M211 402 L220 418 L229 402 Z"/>
+    <path d="M511 402 L520 418 L529 402 Z"/>
+    <path d="M861 402 L870 418 L879 402 Z"/>
+    <path d="M1161 402 L1170 418 L1179 402 Z"/>
+    <path d="M361 664 L370 680 L379 664 Z"/>
+    <path d="M361 808 L370 824 L379 808 Z"/>
+    <path d="M361 952 L370 968 L379 952 Z"/>
+    <path d="M1011 664 L1020 680 L1029 664 Z"/>
+    <path d="M1011 808 L1020 824 L1029 808 Z"/>
+    <path d="M1011 952 L1020 968 L1029 952 Z"/>
+    <path d="M1414 301 L1430 310 L1414 319 Z"/>
+    <path d="M1302 861 L1286 870 L1302 879 Z"/>
+    <path d="M361 1228 L370 1244 L379 1228 Z"/>
+    <path d="M1011 1224 L1020 1208 L1029 1224 Z"/>
+  </g>
+</svg>
