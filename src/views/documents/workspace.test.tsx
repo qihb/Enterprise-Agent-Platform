@@ -21,7 +21,13 @@ describe("资料页面状态", () => {
   it("格式化文件大小和真实状态，不把上传当成解析完成", async () => {
     const { formatSize, statusLabel } = await import(modulePath);
     expect(formatSize(1024)).toBe("1.0 KB");
-    expect(statusLabel("queued", false)).toBe("已保存 · 待处理");
+    expect(statusLabel("stored", false)).toBe("已保存");
     expect(statusLabel("deleted", true)).toBe("已停用 · 待清理");
+  });
+  it("重复资料副本未清理时不误报原资料保存失败", async () => {
+    const { uploadNotice } = await import(modulePath);
+    expect(uploadNotice({ duplicate: true, duplicateCleanupPending: true })).toContain("副本清理待处理");
+    expect(uploadNotice({ duplicate: true })).toContain("没有重复保存");
+    expect(uploadNotice({ duplicate: false })).toContain("资料已保存");
   });
 });

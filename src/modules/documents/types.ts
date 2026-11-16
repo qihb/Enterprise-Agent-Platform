@@ -1,10 +1,12 @@
 import type { SavedFile } from "../../adapters/storage/local";
 
-export type DocumentStatus = "queued" | "processing" | "ready" | "failed" | "deleted";
+export type DocumentStatus = "stored" | "deleted";
 export type DocumentRecord = SavedFile & {
   filename: string;
   ownerId: string;
   createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
   status: DocumentStatus;
   cleanupPending: boolean;
 };

@@ -24,7 +24,7 @@ async function setup() {
     async create(record: Record<string, unknown>) {
       const old = records.find((item) => item.contentHash === record.contentHash);
       if (old) return { document: old, duplicate: true };
-      const saved = { ...record, createdAt: new Date().toISOString(), status: "queued" };
+      const saved = { ...record, createdAt: new Date().toISOString(), status: "stored", cleanupPending: false };
       records.push(saved);
       return { document: saved, duplicate: false };
     },
@@ -50,7 +50,7 @@ describe("资料功能（数据库替身，不算真实入库验证）", () => {
     const { service } = await setup();
     const result = await service.upload("资料.pdf", new Response(pdf).body);
     expect(result.document.filename).toBe("资料.pdf");
-    expect(result.document.status).toBe("queued");
+    expect(result.document.status).toBe("stored");
     expect(result.document).not.toHaveProperty("storageKey");
     expect(result.document).not.toHaveProperty("ownerId");
     expect(result.duplicate).toBe(false);
@@ -69,6 +69,40 @@ describe("资料功能（数据库替身，不算真实入库验证）", () => {
     await expect(service.upload("test.pdf", new Response(pdf).body)).rejects.toThrow();
     expect(await readdir(directory)).toEqual([]);
   });
+  it("COMMIT 不确定时保留文件供核对", async () => {
+    const { service, repository, directory } = await setup();
+    const { DocumentError } = await import("./errors");
+    repository.create = async () => { throw new DocumentError("save_uncertain"); };
+    await expect(service.upload("test.pdf", new Response(pdf).body)).rejects.toMatchObject({ code: "save_uncertain" });
+    expect(await readdir(directory)).toHaveLength(1);
+  });
+  it("去重副本清理失败仍返回已有文档并提示待清理", async () => {
+    const { service, store } = await setup();
+    const first = await service.upload("first.pdf", new Response(pdf).body);
+    store.remove = async () => { throw new Error("disk unavailable"); };
+    await expect(service.upload("second.pdf", new Response(pdf).body)).resolves.toMatchObject({
+      document: { id: first.document.id, filename: "first.pdf" }, duplicate: true, duplicateCleanupPending: true,
+    });
+  });
+  it("删除提交不确定时不得清理文件", async () => {
+    const { service, repository, directory } = await setup();
+    const { DocumentError } = await import("./errors");
+    const saved = await service.upload("test.pdf", new Response(pdf).body);
+    repository.markDeleted = async () => { throw new DocumentError("save_uncertain"); };
+    await expect(service.remove(saved.document.id)).rejects.toMatchObject({ code: "save_uncertain" });
+    expect(await readdir(directory)).toHaveLength(1);
+  });
+  it("文件清理失败后保持停用状态且允许重试", async () => {
+    const { service, store, records } = await setup();
+    const saved = await service.upload("test.pdf", new Response(pdf).body);
+    const remove = store.remove.bind(store);
+    store.remove = async () => { throw new Error("disk unavailable"); };
+    await expect(service.remove(saved.document.id)).resolves.toEqual({ cleanupPending: true });
+    expect(records[0]).toMatchObject({ status: "deleted", cleanupPending: true });
+    await expect(service.file(saved.document.id)).rejects.toMatchObject({ code: "not_found" });
+    store.remove = remove;
+    await expect(service.remove(saved.document.id)).resolves.toEqual({ cleanupPending: false });
+  });
   it("删除先停用记录，之后不能读取，清理可重试", async () => {
     const { service, records, directory } = await setup();
     const saved = await service.upload("test.pdf", new Response(pdf).body);
@@ -83,5 +117,12 @@ describe("资料功能（数据库替身，不算真实入库验证）", () => {
     const { service } = await setup();
     await expect(service.file("00000000-0000-4000-8000-000000000000"))
       .rejects.toMatchObject({ code: "not_found" });
+  });
+  it("有权读取的记录缺失加密文件时报告存储故障", async () => {
+    const { service, store } = await setup();
+    const saved = await service.upload("test.pdf", new Response(pdf).body);
+    const { DocumentError } = await import("./errors");
+    store.read = async () => { throw new DocumentError("not_found"); };
+    await expect(service.file(saved.document.id)).rejects.toMatchObject({ code: "storage_failed" });
   });
 });

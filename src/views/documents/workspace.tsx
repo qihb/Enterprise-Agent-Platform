@@ -20,7 +20,12 @@ export function formatSize(bytes: number) {
 
 export function statusLabel(status: DocumentStatus, pending: boolean) {
   if (status === "deleted") return pending ? "已停用 · 待清理" : "已删除";
-  return { queued: "已保存 · 待处理", processing: "处理中", ready: "可问答", failed: "处理失败" }[status];
+  return "已保存";
+}
+
+export function uploadNotice(result: { duplicate?: boolean; duplicateCleanupPending?: boolean }) {
+  if (result.duplicateCleanupPending) return "这份资料已存在；本次上传副本清理待处理，已有资料不受影响。";
+  return result.duplicate ? "这份资料已存在，没有重复保存。" : "上传成功，资料已保存。解析与问答尚未接入。";
 }
 
 type ApiError = { error?: { code?: string; message?: string } };
@@ -125,12 +130,12 @@ export function DocumentWorkspace({ initialUnavailable }: { initialUnavailable: 
     };
     const finish = () => { uploadLock.current = false; setUpload(null); xhr.current = null; };
     request.onload = async () => {
-      let data: ApiError & { duplicate?: boolean; document?: DocumentView };
+      let data: ApiError & { duplicate?: boolean; duplicateCleanupPending?: boolean; document?: DocumentView };
       try { data = JSON.parse(request.responseText); } catch { finish(); setNotice("上传响应无效，请刷新列表确认结果。"); return; }
       finish();
       if (request.status >= 200 && request.status < 300 && data.document) {
         await load();
-        setNotice(data.duplicate ? "这份资料已存在，没有重复保存。" : "上传成功，资料已保存。解析与问答尚未接入。");
+        setNotice(uploadNotice(data));
       } else {
         setNotice(data.error?.message ?? "上传未完成，请刷新列表确认后再试。");
       }
@@ -177,7 +182,7 @@ export function DocumentWorkspace({ initialUnavailable }: { initialUnavailable: 
         <span className="current-step">01 上传与管理</span><span>02 读取资料 · 后续</span><span>03 提问与引用 · 后续</span>
       </nav>
       {unavailable ? <aside className="setup-note"><strong>本地保存尚未配置</strong>
-        <p>本轮仅完成代码，不变更数据库。配置专用数据库、驱动和文件加密密钥后才能保存资料。</p>
+        <p>请检查专用数据库和文件加密密钥配置，配置有效后才能保存资料。</p>
         <a href="#configuration">查看配置说明</a></aside> : null}
       <section className={`upload-zone${dragging ? " dragging" : ""}`} aria-labelledby="upload-title"
         onDragOver={(event) => { event.preventDefault(); setDragging(true); }}
@@ -217,7 +222,7 @@ export function DocumentWorkspace({ initialUnavailable }: { initialUnavailable: 
       </section>
       <details className="configuration" id="configuration"><summary>本地保存需要哪些配置？</summary>
         <p>需要专用 PostgreSQL 数据库、获准安装的 pg 驱动、仓库外文件目录，以及服务端文件加密密钥。详细步骤见项目 README。</p>
-        <p>本次没有创建数据库、账号或执行迁移。配置缺失时不保存文件，不调用外部 AI，也不会用示例资料代替真实结果。</p></details>
+        <p>服务不会自动建库或执行迁移。配置缺失时不保存文件，不调用外部 AI，也不会用示例资料代替真实结果。</p></details>
       <footer className="footnote"><span>本机单人演示 · 固定演示身份 · 不开放公网</span><span>Next.js / PostgreSQL</span></footer>
       <dialog ref={dialog} className="delete-dialog" onCancel={(event) => { if (busyDelete) event.preventDefault(); else setDeleting(null); }} aria-labelledby="delete-title">
         <p className="eyebrow">资料管理</p><h2 id="delete-title">{deleting?.cleanupPending ? "重试文件清理？" : "删除这份资料？"}</h2>

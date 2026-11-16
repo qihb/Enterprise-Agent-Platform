@@ -21,15 +21,24 @@ export class DocumentService {
       }
       throw error;
     }
-    if (result.duplicate) await this.storage.remove(saved.storageKey);
-    return { document: documentView(result.document), duplicate: result.duplicate };
+    let duplicateCleanupPending = false;
+    if (result.duplicate) {
+      try { await this.storage.remove(saved.storageKey); }
+      catch { duplicateCleanupPending = true; }
+    }
+    return { document: documentView(result.document), duplicate: result.duplicate, duplicateCleanupPending };
   }
 
   async file(id: string) {
     if (!UUID.test(id)) throw new DocumentError("not_found");
     const record = await this.repository.find(id);
     if (!record || record.status === "deleted") throw new DocumentError("not_found");
-    const data = await this.storage.read(record.storageKey);
+    let data: Buffer;
+    try { data = await this.storage.read(record.storageKey); }
+    catch (error) {
+      if (error instanceof DocumentError && error.code === "not_found") throw new DocumentError("storage_failed");
+      throw error;
+    }
     // Recheck after I/O so a concurrent deletion cannot expose the old file.
     if (!await this.repository.find(id)) throw new DocumentError("not_found");
     return { data, filename: record.filename };
